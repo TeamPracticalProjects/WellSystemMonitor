@@ -24,12 +24,12 @@
 
     author: Bob Glicksman, Jim Schrempp; 06/25/2018
 
-    (c) 2017, Bob Glicksman and Jim Schrempp, Team Practical Projects
+    (c) 2017, 2018 Bob Glicksman and Jim Schrempp, Team Practical Projects
 
-20170530a: Added Blynk application notification of water detection with Blynk Terminal and LED.
 ***********************************************************************************************************/
 //#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
 
+#include <WSMGlobals.h>
 #include <PietteTech_DHT.h> // non-blocking library for DHT11
 
 // Constants and definitions
@@ -123,8 +123,8 @@ boolean LEDPinState = false;   // D7 LED is used for indicating DHT measurements
 int mg_debugValue = 100;
 int mg_debugValue2 = 200;
 String mg_debugString1 = "***";
-
-
+String mg_particleSensorReport = "";
+String mg_particleDHTReport = "*";
 
 // setup()
 void setup() {
@@ -139,6 +139,8 @@ void setup() {
     initDebounce(&mg_wellPumpSensor, WELL_PUMP_SENSOR_PIN, false, false, 0, 1000);
     initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, false, false, 0, 1000);
     initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
+
+
 }  // end of setup()
 
 // loop()
