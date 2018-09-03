@@ -29,7 +29,6 @@
 20170530a: Added Blynk application notification of water detection with Blynk Terminal and LED.
 ***********************************************************************************************************/
 //#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
-#define BLYNK_NOTIFY    // comment out if you do not want Blynk to be active
 
 #include <PietteTech_DHT.h> // non-blocking library for DHT11
 #include <blynk.h>  // Blynk library
@@ -93,42 +92,6 @@ bool readPinDebounced(ty_debouncePin *_pinToRead); // Early declare to avoid com
 PietteTech_DHT DHT(DHTPIN, DHTTYPE);    // create DHT object to read temp and humidity
 Servo myservo;  // create servo object to control a servo
 
-#ifdef BLYNK_NOTIFY
-//blynk
-#include "blynk.h"
-
-// WLD Saratoga
-char mg_auth[] = "cd1953704a23482585cb7b962bc57ddc"; //YOUR BLYNK AUTH TOKEN GOES HERE  // DO NOT CHECK IN YOUR BLYNK AUTH!!
-#define BLYNK_VPIN_TERMINAL V4
-#define BLYNK_VPIN_HUMIDITY V5
-#define BLYNK_VPIN_TEMPERATURE V7
-#define BLYNK_VPIN_WELLPUMP V8
-#define BLYNK_VPIN_PRESSUREPUMP V9
-
-// These functions are called by Blynk application widgets to get the value of
-// a "Virtual Pin"
-BLYNK_READ(BLYNK_VPIN_HUMIDITY)
-{
-    Blynk.virtualWrite(BLYNK_VPIN_HUMIDITY, mg_smoothedHumidity);
-}
-
-BLYNK_READ(BLYNK_VPIN_TEMPERATURE)
-{
-    Blynk.virtualWrite(BLYNK_VPIN_TEMPERATURE, mg_smoothedTemp);
-}
-
-BLYNK_READ(BLYNK_VPIN_WELLPUMP)
-{
-    Blynk.virtualWrite(BLYNK_VPIN_WELLPUMP, mg_wellPumpState);
-}
-
-BLYNK_READ(BLYNK_VPIN_PRESSUREPUMP)
-{
-    Blynk.virtualWrite(BLYNK_VPIN_PRESSUREPUMP, mg_pressurePumpState);
-}
-
-
-#endif
 
 // Utility functions
 
@@ -140,34 +103,14 @@ String dateTimeString(){
 
 // We leave the method calls so that we don't have to ifdef every place it might be
 // called in the code.
-void blynkRaiseAlarm()
+void raiseAlarm()
 {
-#ifdef BLYNK_NOTIFY
-    static int notifyCount = 0;
-    notifyCount++;
-    String blynkWarning = "TEST Button Pressed (" + String(notifyCount) + ") ";
-    Blynk.notify(blynkWarning);
 
-    blynkWriteTerminal(blynkWarning);
-    blynkWriteTerminal(dateTimeString() + "\r\n");
-#endif
 }
 
-void blynkReportRestart()
+void reportRestart()
 {
-#ifdef BLYNK_NOTIFY
-    blynkWriteTerminal("---------\r\n");
-    blynkWriteTerminal("WellSystemMonitor restarted: ");
-    blynkWriteTerminal(dateTimeString() + "\r\n");
-#endif
-}
 
-
-void blynkWriteTerminal(String msg)
-{
-#ifdef BLYNK_NOTIFY
-    Blynk.virtualWrite(BLYNK_VPIN_TERMINAL,msg);
-#endif
 }
 
 
@@ -192,12 +135,6 @@ void setup() {
     mg_pressurePumpSensor = {.pinNumber = PRESSURE_PUMP_SENSOR_PIN, .value = false, .lastReadValue = false, .beginTime = 0, .debounceDelay = 1000};
     mg_htSwitchPin = {.pinNumber = HT_SWITCH_PIN, .value = false, .lastReadValue = false, .beginTime = 0, .debounceDelay = 50};
 
-
-#ifdef BLYNK_NOTIFY
-    Blynk.begin(mg_auth);
-    blynkReportRestart();
-#endif
-
 }  // end of setup()
 
 // loop()
@@ -214,9 +151,6 @@ void loop() {
     // Non-blocking read of DHT11 data and publish and display it
     float currentTemp, currentHumidity;
 
-#ifdef BLYNK_NOTIFY
-    Blynk.run();
-#endif
 
     static boolean onceUponRestart = true;
     if (onceUponRestart){
