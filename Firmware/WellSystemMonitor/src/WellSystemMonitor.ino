@@ -31,7 +31,6 @@
 //#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
 
 #include <PietteTech_DHT.h> // non-blocking library for DHT11
-#include <blynk.h>  // Blynk library
 
 // Constants and definitions
 #define DHTTYPE  DHT11              // Sensor type DHT11/21/22/AM2301/AM2302
@@ -78,15 +77,19 @@ bool mg_wellPumpState, mg_pressurePumpState;
 
 // structure to hold pins that need to be DEBOUNCED
 typedef struct {
-    unsigned int pinNumber;
-    bool value;
-    bool lastReadValue;
-    unsigned long beginTime;
-    unsigned long debounceDelay; // in milliseconds
+    unsigned int pinNumber;      // pin number to Monitor
+    bool value;                  // the current debounced value of the pin
+    bool lastReadValue;          // the value of the pin when it was last read - not DEBOUNCED
+    unsigned long beginTime;     // the time when lastReadValue was read
+    unsigned long debounceDelay; // in milliseconds. lastReadValue must remain unchanged this long
+                                 // for the code to update the value
 } ty_debouncePin;
 ty_debouncePin mg_pushbutton, mg_wellPumpSensor, mg_pressurePumpSensor, mg_htSwitchPin;
 
-bool readPinDebounced(ty_debouncePin *_pinToRead); // Early declare to avoid compiler issue
+// Early declares to avoid compiler making it's own decision about parameters
+bool readPinDebounced(ty_debouncePin *_pinToRead);
+void initDebounce (ty_debouncePin *debounceStruct, int _pinNumber, boolean _value, boolean _lastReadValue, int _beginTime, long _debounceDelay);
+
 
 // Lib instantiate
 PietteTech_DHT DHT(DHTPIN, DHTTYPE);    // create DHT object to read temp and humidity
@@ -121,6 +124,8 @@ int mg_debugValue = 100;
 int mg_debugValue2 = 200;
 String mg_debugString1 = "***";
 
+
+
 // setup()
 void setup() {
     pinMode(LED_PIN, OUTPUT);
@@ -130,11 +135,10 @@ void setup() {
     pinMode(WELL_PUMP_SENSOR_PIN, INPUT_PULLUP);
     pinMode(PRESSURE_PUMP_SENSOR_PIN, INPUT_PULLUP);
     myservo.attach(SERVO_PIN);  // attaches to the servo object
-    mg_pushbutton = {.pinNumber = BUTTON_PIN, .value = false, .lastReadValue = false, .beginTime = 0, .debounceDelay = 100};
-    mg_wellPumpSensor = {.pinNumber = WELL_PUMP_SENSOR_PIN, .value = false, .lastReadValue = false, .beginTime = 0,  .debounceDelay = 1000};
-    mg_pressurePumpSensor = {.pinNumber = PRESSURE_PUMP_SENSOR_PIN, .value = false, .lastReadValue = false, .beginTime = 0, .debounceDelay = 1000};
-    mg_htSwitchPin = {.pinNumber = HT_SWITCH_PIN, .value = false, .lastReadValue = false, .beginTime = 0, .debounceDelay = 50};
-
+    initDebounce(&mg_pushbutton, BUTTON_PIN, false, false, 0, 100);
+    initDebounce(&mg_wellPumpSensor, WELL_PUMP_SENSOR_PIN, false, false, 0, 1000);
+    initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, false, false, 0, 1000);
+    initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
 }  // end of setup()
 
 // loop()
@@ -242,6 +246,17 @@ void loop() {
 
 } // end of loop()
 
+/* initDebounce():  used to initialize the debounce structure for a pin
+    parameters:
+        These are documented in the ty_debouncePin structure declaration
+*/
+void initDebounce (ty_debouncePin *debounceStruct, int _pinNumber, boolean _value, boolean _lastReadValue, int _beginTime, long _debounceDelay) {
+    debounceStruct->pinNumber = _pinNumber;
+    debounceStruct->value = _value;
+    debounceStruct->lastReadValue = _lastReadValue;
+    debounceStruct->beginTime = _beginTime;
+    debounceStruct->debounceDelay = _debounceDelay;
+}
 
 
 
