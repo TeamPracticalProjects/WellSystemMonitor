@@ -23,6 +23,7 @@ boolean nbBlink(byte numBlinks, unsigned long blinkTime);
 
 // make a JSON element of "name":"value"
 String makeNameValuePair(String name, String value);
-
+String makeNameValuePairLong(String name, long value);
+String makeNameValuePairFloat(String name, float value);
 
 #endif  // end of header duplication prevention

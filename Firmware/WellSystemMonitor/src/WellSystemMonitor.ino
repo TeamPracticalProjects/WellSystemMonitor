@@ -30,6 +30,7 @@
 //#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
 
 #include <WSMGlobals.h>
+#include <TPPUtils.h>
 #include <PietteTech_DHT.h> // non-blocking library for DHT11
 
 // Constants and definitions
@@ -113,7 +114,7 @@ void raiseAlarm()
 
 void reportRestart()
 {
-
+    Particle.publish("WSM System Status", "Restart");
 }
 
 
@@ -140,6 +141,11 @@ void setup() {
     initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, false, false, 0, 1000);
     initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
 
+    Particle.variable("SensorReport", mg_particleSensorReport);
+
+    delay(2000);
+    reportRestart();
+    createSensorJSON();
 
 }  // end of setup()
 
@@ -154,9 +160,10 @@ void loop() {
     static boolean firstNotification = false;  // indicator to use for a second alarm notification
    	static unsigned long firstNotifyTime;	// record time of first notification to time the second one
 
+    boolean needNewReport = false;
+
     // Non-blocking read of DHT11 data and publish and display it
     float currentTemp, currentHumidity;
-
 
     static boolean onceUponRestart = true;
     if (onceUponRestart){
@@ -182,6 +189,8 @@ void loop() {
         mg_smoothedTemp =  (0.9 * mg_smoothedTemp) +  (0.1 * currentTemp);
         mg_smoothedHumidity =  (0.9 * mg_smoothedHumidity) +  (0.1 * currentHumidity);
 
+        needNewReport = true;
+
 	    newDHTData = false; // don't update results again until a new reading
       }
 
@@ -205,6 +214,7 @@ void loop() {
     // Handle toggle switch and servo meter
 
     //  read the toggle switch position and set the boolean for type of display accordingly
+    readPinDebounced(&mg_htSwitchPin);
     if(mg_htSwitchPin.value == false)  {   // indicates a temperature display
         htSwitchState = HT_SWITCH_TEMPERATURE;
     } else {
@@ -221,29 +231,36 @@ void loop() {
         Particle.publish("Temperature Smoothed (oF)", String(mg_smoothedTemp));
     }
 
-
     // Handle pushbutton
 
     // process the pushbutton
     if(readPinDebounced(&mg_pushbutton) == true) {
         //Pinstate has changed
+        needNewReport = true;
         String tempString = String(mg_pushbutton.value);
         Particle.publish("pushbutton state:", tempString );
     }
-
 
     // Handle the sensors
 
     // process the well pump sensor
     if(readPinDebounced(&mg_wellPumpSensor) == true) {
+        needNewReport = true;
         String tempString = String(mg_wellPumpSensor.value);
         Particle.publish("well pump state:", tempString);
     }
 
     // process the pressure pump sensor
     if(readPinDebounced(&mg_pressurePumpSensor) == true) {
+        needNewReport = true;
         String tempString = String(mg_pressurePumpSensor.value);
         Particle.publish("pressure pump state:", tempString);
+    }
+
+    // create a new report if needed
+    if (needNewReport) {
+        mg_particleSensorReport = createSensorJSON();
+        needNewReport = false;
     }
 
 } // end of loop()
@@ -260,6 +277,26 @@ void initDebounce (ty_debouncePin *debounceStruct, int _pinNumber, boolean _valu
     debounceStruct->debounceDelay = _debounceDelay;
 }
 
+
+/* createSensorJSON(): returns a string suitable for passing to the cloud, containing
+     the current values of all sensors
+*/
+
+String createSensorJSON(){
+
+    String json = "";
+    json += makeNameValuePair("Project", "Well System Monitor");
+    json += "," + makeNameValuePairLong("JSONVersion", 2);
+    json += "," + makeNameValuePairLong("PushButton", mg_pushbutton.value);
+    json += "," + makeNameValuePairLong("Toggle", mg_htSwitchPin.value);
+    json += "," + makeNameValuePairLong("WellPump", mg_wellPumpSensor.value);
+    json += "," + makeNameValuePairLong("PressurePump", mg_pressurePumpSensor.value);
+    json += "," + makeNameValuePairFloat("TEMP", mg_smoothedTemp);
+    json += "," + makeNameValuePairFloat("RH", mg_smoothedHumidity);
+    json = "{" + json + "}";
+    return json;
+
+}
 
 
 /* nbFlashIndicator():  non-blocking function to flash the indicator LED when alarming

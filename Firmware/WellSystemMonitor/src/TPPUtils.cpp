@@ -144,4 +144,20 @@ String makeNameValuePair(String name, String value)
 	nameValuePair += DOUBLEQ + value + DOUBLEQ;
 	return nameValuePair;
 }
+String makeNameValuePairLong(String name, long value)
+{
+	String nameValuePair = "";
+	nameValuePair += DOUBLEQ + name + DOUBLEQ;
+	nameValuePair += ":";
+	nameValuePair += String(value);
+	return nameValuePair;
+}
+String makeNameValuePairFloat(String name, float value)
+{
+	String nameValuePair = "";
+	nameValuePair += DOUBLEQ + name + DOUBLEQ;
+	nameValuePair += ":";
+	nameValuePair += String(value,2);
+	return nameValuePair;
+}
 /*********************************** end of makeNameValuePair() ********************************************/
