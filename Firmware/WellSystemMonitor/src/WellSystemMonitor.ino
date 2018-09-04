@@ -46,8 +46,7 @@ const int SERVO_PIN = A5;                // servo pin
 const bool HT_SWITCH_HUMIDITY = false;
 const bool HT_SWITCH_TEMPERATURE = true;
 #define DHT_SAMPLE_INTERVAL   4000  // Sample every 4 seconds; must not be less than the time required to read DHT
-#define PARTICLE_PUBLISH_INTERVAL 60000 // Publish values every 60 seconds
-#define SECOND_NOTIFY_DELAY 30000  // the second alarm notification comes 30 seconds after the first notification
+#define PARTICLE_DHT_PUBLISH_INTERVAL 600000 // Publish values every 10 minutes
 
 // servo calibration values
 const int MIN_POS = 5;  // the minimum position value allowed
@@ -67,8 +66,6 @@ const int LO_HUM = 0;  // based upon meter dial face for humidity (%RH)
 const unsigned int ACQUIRING  = 0;
 const unsigned int COMPLETE_OK  = 1;
 const unsigned int COMPLETE_ERROR  = 2;
-
-
 
 // global to hold the smoothed values of humidity and temperature that we display and report
 float mg_smoothedTemp = 0.0, mg_smoothedHumidity = 0.0; // smoothed for the display
@@ -105,27 +102,15 @@ String dateTimeString(){
     return dateTime;
 }
 
-// We leave the method calls so that we don't have to ifdef every place it might be
-// called in the code.
-void raiseAlarm()
+void reportDeviceRestart()
 {
-
+    Particle.publish("WSM", "System Restart");
 }
-
-void reportRestart()
-{
-    Particle.publish("WSM System Status", "Restart");
-}
-
 
 // Globals
 boolean LEDPinState = false;   // D7 LED is used for indicating DHT measurements
-
-int mg_debugValue = 100;
-int mg_debugValue2 = 200;
-String mg_debugString1 = "***";
 String mg_particleSensorReport = "";
-String mg_particleDHTReport = "*";
+String mg_particleDHTReport = "";
 
 // setup()
 void setup() {
@@ -144,8 +129,6 @@ void setup() {
     Particle.variable("SensorReport", mg_particleSensorReport);
 
     delay(2000);
-    reportRestart();
-    createSensorJSON();
 
 }  // end of setup()
 
@@ -168,7 +151,8 @@ void loop() {
     static boolean onceUponRestart = true;
     if (onceUponRestart){
         onceUponRestart = false;
-
+        reportDeviceRestart();
+        createSensorJSON();
     }
 
     int DHTsensorStatus = startReadDHT(false);  // refresh the sensor status but don't start a new reading
@@ -214,7 +198,9 @@ void loop() {
     // Handle toggle switch and servo meter
 
     //  read the toggle switch position and set the boolean for type of display accordingly
-    readPinDebounced(&mg_htSwitchPin);
+    if(readPinDebounced(&mg_htSwitchPin)){
+        Particle.publish("WSM", "ht toggle state:" + String(mg_htSwitchPin.value));
+    };
     if(mg_htSwitchPin.value == false)  {   // indicates a temperature display
         htSwitchState = HT_SWITCH_TEMPERATURE;
     } else {
@@ -223,12 +209,12 @@ void loop() {
 
     moveServo(htSwitchState);
 
-    if((diff(millis(), lastPublishTime)) >= PARTICLE_PUBLISH_INTERVAL)  // we should publish our values
+    if((diff(millis(), lastPublishTime)) >= PARTICLE_DHT_PUBLISH_INTERVAL)  // we should publish our values
     {
         lastPublishTime = millis();
         // publish Smoothed temperature and humidity readings to the cloud
-        Particle.publish("Humidity Smoothed (%)", String(mg_smoothedHumidity));
-        Particle.publish("Temperature Smoothed (oF)", String(mg_smoothedTemp));
+        Particle.publish("WSM", "Humidity Smoothed (%): " + String(mg_smoothedHumidity));
+        Particle.publish("WSM", "Temperature Smoothed (oF): " + String(mg_smoothedTemp));
     }
 
     // Handle pushbutton
@@ -238,7 +224,7 @@ void loop() {
         //Pinstate has changed
         needNewReport = true;
         String tempString = String(mg_pushbutton.value);
-        Particle.publish("pushbutton state:", tempString );
+        Particle.publish("WSM", "pushbutton state: " + tempString );
     }
 
     // Handle the sensors
@@ -247,14 +233,14 @@ void loop() {
     if(readPinDebounced(&mg_wellPumpSensor) == true) {
         needNewReport = true;
         String tempString = String(mg_wellPumpSensor.value);
-        Particle.publish("well pump state:", tempString);
+        Particle.publish("WSM",  "well pump state: " + tempString);
     }
 
     // process the pressure pump sensor
     if(readPinDebounced(&mg_pressurePumpSensor) == true) {
         needNewReport = true;
         String tempString = String(mg_pressurePumpSensor.value);
-        Particle.publish("pressure pump state:", tempString);
+        Particle.publish("WSM", "pressure pump state: " + tempString);
     }
 
     // create a new report if needed
@@ -287,6 +273,7 @@ String createSensorJSON(){
     String json = "";
     json += makeNameValuePair("Project", "Well System Monitor");
     json += "," + makeNameValuePairLong("JSONVersion", 2);
+    json += "," + makeNameValuePair("Time", Time.format("%F %T"));
     json += "," + makeNameValuePairLong("PushButton", mg_pushbutton.value);
     json += "," + makeNameValuePairLong("Toggle", mg_htSwitchPin.value);
     json += "," + makeNameValuePairLong("WellPump", mg_wellPumpSensor.value);
