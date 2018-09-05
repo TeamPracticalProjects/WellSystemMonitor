@@ -104,7 +104,7 @@ String dateTimeString(){
 
 void reportDeviceRestart()
 {
-    Particle.publish("WSM", "System Restart");
+    publishParticleEvent("System Restart");
 }
 
 // Globals
@@ -199,7 +199,7 @@ void loop() {
 
     //  read the toggle switch position and set the boolean for type of display accordingly
     if(readPinDebounced(&mg_htSwitchPin)){
-        Particle.publish("WSM", "ht toggle state:" + String(mg_htSwitchPin.value));
+        publishParticleEvent("ht toggle state:" + String(mg_htSwitchPin.value));
     };
     if(mg_htSwitchPin.value == false)  {   // indicates a temperature display
         htSwitchState = HT_SWITCH_TEMPERATURE;
@@ -213,8 +213,8 @@ void loop() {
     {
         lastPublishTime = millis();
         // publish Smoothed temperature and humidity readings to the cloud
-        Particle.publish("WSM", "Humidity Smoothed (%): " + String(mg_smoothedHumidity));
-        Particle.publish("WSM", "Temperature Smoothed (oF): " + String(mg_smoothedTemp));
+        publishParticleEvent("Humidity Smoothed (%): " + String(mg_smoothedHumidity));
+        publishParticleEvent( "Temperature Smoothed (oF): " + String(mg_smoothedTemp));
     }
 
     // Handle pushbutton
@@ -224,7 +224,7 @@ void loop() {
         //Pinstate has changed
         needNewReport = true;
         String tempString = String(mg_pushbutton.value);
-        Particle.publish("WSM", "pushbutton state: " + tempString );
+        publishParticleEvent("pushbutton state: " + tempString );
     }
 
     // Handle the sensors
@@ -233,14 +233,14 @@ void loop() {
     if(readPinDebounced(&mg_wellPumpSensor) == true) {
         needNewReport = true;
         String tempString = String(mg_wellPumpSensor.value);
-        Particle.publish("WSM",  "well pump state: " + tempString);
+        publishParticleEvent("well pump state: " + tempString);
     }
 
     // process the pressure pump sensor
     if(readPinDebounced(&mg_pressurePumpSensor) == true) {
         needNewReport = true;
         String tempString = String(mg_pressurePumpSensor.value);
-        Particle.publish("WSM", "pressure pump state: " + tempString);
+        publishParticleEvent("pressure pump state: " + tempString);
     }
 
     // create a new report if needed
@@ -282,6 +282,16 @@ String createSensorJSON(){
     json += "," + makeNameValuePairFloat("RH", mg_smoothedHumidity);
     json = "{" + json + "}";
     return json;
+
+}
+
+/* publishParticleEvent()  Used to make each publish event the same format
+        String message     The message to publish
+*/
+void publishParticleEvent (String message){
+
+    String thisTime = Time.format("%F %T");
+    Particle.publish("WSM", thisTime + " | " + message);
 
 }
 
