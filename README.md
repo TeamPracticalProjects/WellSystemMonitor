@@ -14,8 +14,9 @@ Because this system is built using the WaterLeakDetector code, temperature and h
 from a DHT11 sensor is also logged to the cloud storage every hour. Perhaps water pump
 activity will correlate with temperature and/or humidity.
 
-This program uses the Blynk cloud system to pass debug information, and current sensor
-readings to a smart phone application.
+This system publishes events and exposes variables through the Particle.io cloud system 
+to pass current sensor readings to a smart phone application. It also uses IFTTT to 
+capture these published events to a Google Docs spreadsheet. 
 
 This program also supports a "test" button. When pressed a test event is sent to the cloud
 storage.
