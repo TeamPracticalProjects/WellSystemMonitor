@@ -128,7 +128,11 @@ void setup() {
 
     Particle.variable("SensorReport", mg_particleSensorReport);
 
-    delay(2000);
+    digitalWrite(INDICATOR_PIN, HIGH);
+    delay(600);
+    digitalWrite(INDICATOR_PIN, LOW);
+    delay(1200);  // Give particle cloud time to stabilize
+    digitalWrite(INDICATOR_PIN, HIGH);  // Pushbutton pin remains solid ON while device is working
 
 }  // end of setup()
 
@@ -183,7 +187,6 @@ void loop() {
           newDHTData = true; // set flag to indicate that a new reading will result
           lastDHTReadTime = millis();
 
-
             // toggle the D7 LED to indicate loop timing for DHT11 reading
             LEDPinState = !LEDPinState;
             if (LEDPinState) {
@@ -193,6 +196,7 @@ void loop() {
             }
 
         }
+
     }
 
     // Handle toggle switch and servo meter
@@ -225,6 +229,8 @@ void loop() {
         needNewReport = true;
         String tempString = String(mg_pushbutton.value);
         publishParticleEvent("pushbutton state: " + tempString );
+
+        digitalWrite(INDICATOR_PIN, mg_pushbutton.value);  //if the push button is depressed, turn off indicator
     }
 
     // Handle the sensors
@@ -247,6 +253,10 @@ void loop() {
     if (needNewReport) {
         mg_particleSensorReport = createSensorJSON();
         needNewReport = false;
+    }
+
+    if (not Particle.connected()) {
+        nbFlashIndicator(true);
     }
 
 } // end of loop()
