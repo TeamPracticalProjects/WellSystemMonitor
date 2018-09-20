@@ -46,7 +46,7 @@ const int SERVO_PIN = A5;                // servo pin
 const bool HT_SWITCH_HUMIDITY = false;
 const bool HT_SWITCH_TEMPERATURE = true;
 #define DHT_SAMPLE_INTERVAL   4000  // Sample every 4 seconds; must not be less than the time required to read DHT
-#define PARTICLE_DHT_PUBLISH_INTERVAL 600000 // Publish values every 10 minutes
+#define PARTICLE_DHT_PUBLISH_INTERVAL 1800000 // Publish values every 30 minutes
 
 // servo calibration values
 const int MIN_POS = 5;  // the minimum position value allowed
@@ -238,14 +238,14 @@ void loop() {
     // process the well pump sensor
     if(readPinDebounced(&mg_wellPumpSensor) == true) {
         needNewReport = true;
-        String tempString = String(mg_wellPumpSensor.value);
+        String tempString = String(~mg_wellPumpSensor.value); // pump relay sensor is normally open (1) for off
         publishParticleEvent("well pump state: " + tempString);
     }
 
     // process the pressure pump sensor
     if(readPinDebounced(&mg_pressurePumpSensor) == true) {
         needNewReport = true;
-        String tempString = String(mg_pressurePumpSensor.value);
+        String tempString = String(~mg_pressurePumpSensor.value); // pump relay sensor is normally open (1) for off
         publishParticleEvent("pressure pump state: " + tempString);
     }
 
