@@ -238,14 +238,14 @@ void loop() {
     // process the well pump sensor
     if(readPinDebounced(&mg_wellPumpSensor) == true) {
         needNewReport = true;
-        String tempString = String(~mg_wellPumpSensor.value); // pump relay sensor is normally open (1) for off
+        String tempString = String(!mg_wellPumpSensor.value); // pump relay sensor is normally open (1) for off
         publishParticleEvent("well pump state: " + tempString);
     }
 
     // process the pressure pump sensor
     if(readPinDebounced(&mg_pressurePumpSensor) == true) {
         needNewReport = true;
-        String tempString = String(~mg_pressurePumpSensor.value); // pump relay sensor is normally open (1) for off
+        String tempString = String(!mg_pressurePumpSensor.value); // pump relay sensor is normally open (1) for off
         publishParticleEvent("pressure pump state: " + tempString);
     }
 
@@ -286,8 +286,8 @@ String createSensorJSON(){
     json += "," + makeNameValuePair("Time", Time.format("%F %T"));
     json += "," + makeNameValuePairLong("PushButton", mg_pushbutton.value);
     json += "," + makeNameValuePairLong("Toggle", mg_htSwitchPin.value);
-    json += "," + makeNameValuePairLong("WellPump", mg_wellPumpSensor.value);
-    json += "," + makeNameValuePairLong("PressurePump", mg_pressurePumpSensor.value);
+    json += "," + makeNameValuePairLong("WellPump", !mg_wellPumpSensor.value); // pump relay sensor is normally open (1) for off
+    json += "," + makeNameValuePairLong("PressurePump", !mg_pressurePumpSensor.value); // pump relay sensor is normally open (1) for off
     json += "," + makeNameValuePairFloat("TEMP", mg_smoothedTemp);
     json += "," + makeNameValuePairFloat("RH", mg_smoothedHumidity);
     json = "{" + json + "}";
