@@ -23,6 +23,9 @@
         storage.
 
     author: Bob Glicksman, Jim Schrempp; 06/25/2018
+    version 1.1: corrected bug that turned LED Indicator off sporatically; Bob Glicksman 12/19/18
+    version 1.2: made change to enable the system thread so that firmware can detect disconnects 
+    	from the Particle cloud; Bob Glicksman 12/20/18
 
     (c) 2017, 2018 Bob Glicksman and Jim Schrempp, Team Practical Projects
 
@@ -111,6 +114,8 @@ void reportDeviceRestart()
 boolean LEDPinState = false;   // D7 LED is used for indicating DHT measurements
 String mg_particleSensorReport = "";
 String mg_particleDHTReport = "";
+
+SYSTEM_THREAD(ENABLED); // run threaded operation so firmware can detect and process disconnects from the Particle cloud
 
 // setup()
 void setup() {
@@ -257,6 +262,8 @@ void loop() {
 
     if (not Particle.connected()) {
         nbFlashIndicator(true);
+    } else {
+        digitalWrite(INDICATOR_PIN, mg_pushbutton.value);  //if the push button is depressed, turn off indicator
     }
 
 } // end of loop()
