@@ -24,7 +24,9 @@
 
     author: Bob Glicksman, Jim Schrempp; 06/25/2018
 
-    (c) 2017, 2018 Bob Glicksman and Jim Schrempp, Team Practical Projects
+    (c) 2017, 2018, 2019 Bob Glicksman and Jim Schrempp, Team Practical Projects
+
+    2019.08.27 JBS: Added auto antenna selection in setup(); This file only cloud compiles with Visual Studio Code.
 
 ***********************************************************************************************************/
 //#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
@@ -114,6 +116,9 @@ String mg_particleDHTReport = "";
 
 // setup()
 void setup() {
+
+    WiFi.selectAntenna(ANT_AUTO);
+
     pinMode(LED_PIN, OUTPUT);
     pinMode(INDICATOR_PIN, OUTPUT);
     pinMode(BUTTON_PIN, INPUT_PULLUP);
