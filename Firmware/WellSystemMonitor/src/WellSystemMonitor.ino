@@ -26,8 +26,9 @@
 
     (c) 2017, 2018, 2019 Bob Glicksman and Jim Schrempp, Team Practical Projects
 
-    2019.08.27 JBS: Added auto antenna selection in setup(); This file only cloud compiles with Visual Studio Code.
-
+    2019.08.29 JBS: Added auto antenna selection in setup(); This file only cloud compiles with Visual Studio Code.
+                    Added that first time through loop publish temp and humidity
+                    Made changes to remove compile warnings
 ***********************************************************************************************************/
 //#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
 
@@ -143,14 +144,14 @@ void setup() {
 
 // loop()
 void loop() {
-    static boolean indicator = false;  // set to true to flash the indicator
+    //static boolean indicator = false;  // set to true to flash the indicator
     static unsigned long lastDHTReadTime = 0UL;    // DHT 11 reading time
-    static unsigned long lastPublishTime = 0UL;  // Published particle event time
+    static unsigned long lastPublishTime = millis() - PARTICLE_DHT_PUBLISH_INTERVAL; //0UL;  // Published particle event time
     static boolean newDHTData = false; // flag to indicate DHT11 has new data
     static boolean htSwitchState = HT_SWITCH_TEMPERATURE;  // hold the reading of the toggle switch
-    static boolean htSwitchLastState = HT_SWITCH_TEMPERATURE;  // hold the previous reading of the toggle switch
-    static boolean firstNotification = false;  // indicator to use for a second alarm notification
-   	static unsigned long firstNotifyTime;	// record time of first notification to time the second one
+    //static boolean htSwitchLastState = HT_SWITCH_TEMPERATURE;  // hold the previous reading of the toggle switch
+    //static boolean firstNotification = false;  // indicator to use for a second alarm notification
+   	//static unsigned long firstNotifyTime;	// record time of first notification to time the second one
 
     boolean needNewReport = false;
 
@@ -216,7 +217,7 @@ void loop() {
         htSwitchState = HT_SWITCH_HUMIDITY;
     }
 
-    moveServo(htSwitchState);
+    moveServo(htSwitchState); 
 
     if((diff(millis(), lastPublishTime)) >= PARTICLE_DHT_PUBLISH_INTERVAL)  // we should publish our values
     {
@@ -306,7 +307,7 @@ String createSensorJSON(){
 void publishParticleEvent (String message){
 
     String thisTime = Time.format("%F %T");
-    Particle.publish("WSM", thisTime + " | " + message);
+    Particle.publish("WSM", thisTime + " | " + message, PRIVATE);
 
 }
 
