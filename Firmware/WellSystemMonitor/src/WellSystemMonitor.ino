@@ -32,6 +32,10 @@
     2019.08.29 JBS: Added auto antenna selection in setup(); This file only cloud compiles with Visual Studio Code.
                     Added that first time through loop publish temp and humidity
                     Made changes to remove compile warnings
+
+    2021.05.14 BG: Added DHT.begin() method call to setup().  This is required by the PietteTech_DHT
+                    library since a 2019 update to the Particle OS.  Also updated the PietteTech_DHT
+                    library to the latest version and updated the build to Particle OS 3.0.0.
 ***********************************************************************************************************/
 //#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
 
