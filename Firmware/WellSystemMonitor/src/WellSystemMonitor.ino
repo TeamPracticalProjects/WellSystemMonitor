@@ -137,6 +137,8 @@ void setup() {
     initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, false, false, 0, 1000);
     initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
 
+    DHT.begin();    // start up the DHT11 sensor
+    
     Particle.variable("SensorReport", mg_particleSensorReport);
 
     digitalWrite(INDICATOR_PIN, HIGH);
