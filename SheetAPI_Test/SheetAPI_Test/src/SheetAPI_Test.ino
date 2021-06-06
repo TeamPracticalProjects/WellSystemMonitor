@@ -23,8 +23,8 @@ void setup() {
 
 void loop() {
   // declare the variables for the WSM
-  float temperature = 65.0f;
-  float rh = 20.0f;
+  static float temperature = 65.0f;
+  static float rh = 20.0f;
   int ppValue = 0;
   int wpValue = 0;
 
