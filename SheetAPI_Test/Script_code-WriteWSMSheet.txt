@@ -1,0 +1,31 @@
+function doGet(e) { 
+
+var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1KnRn1F6p8N1VIogLRuw73fXQ44WpIhF6Gt_VK9qKv3g/edit#gid=0");
+var sheet = ss.getSheetByName("Sheet1");
+
+ addUser(e,sheet);
+}
+
+function doPost(e) { 
+ var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1KnRn1F6p8N1VIogLRuw73fXQ44WpIhF6Gt_VK9qKv3g/edit#gid=0");
+ var sheet = ss.getSheetByName("Sheet1"); 
+  
+ addUser(e, sheet);
+}
+
+
+function addUser(e, sheet) {
+  
+  var edata = e.parameter.data;
+  var wsmData = JSON.parse(edata);
+  var ev = e.parameter.event;
+  var pub = e.parameter.published_at;
+  
+  var time = wsmData.etime ; 
+  var temp = wsmData.temp ;
+  var rh = wsmData.rh ;
+  var pp = wsmData.pp ;
+  var wp = wsmData.wp ;
+
+  sheet.appendRow([time,temp,rh,pp,wp,ev,pub]);
+}
