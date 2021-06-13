@@ -28,8 +28,8 @@ function addUser(e, sheet) {
   var wp = wsmData.wp ;
   var ptm = wsmData.ppon ;
   var wtm = wsmData.wpon ;
- // var localTimeString = wsmData.locTime;
+  var loctm = wsmData.loctime ;
 
-  sheet.appendRow([time,temp,rh,pp,wp,ptm,wtm,ev,pub]);
+  sheet.appendRow([time,temp,rh,pp,wp,ptm,wtm,ev,loctm]);
 }
 

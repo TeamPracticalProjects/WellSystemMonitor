@@ -14,6 +14,7 @@ const int LED_PIN = D7;  // declare the onboard LED
 
 void setup() {
   pinMode (LED_PIN, OUTPUT);
+  Time.zone(UTC_OFFSET);
 
   // flash the LED_PIN to indicate end of setup
   digitalWrite(LED_PIN, HIGH);
@@ -52,7 +53,7 @@ void loop() {
 
   // test #3: publish pp turns on, then turns off again
   publishPPchange(1);
-  delay(10000); // 10 second delay, then pump goes off
+  delay(15000); // 15 second delay, then pump goes off
   publishPPchange(0);
 
      // delay before next test
@@ -70,7 +71,7 @@ publishTRH(temperature, rh);
 
   // test #5: publish wp turns on, tehn turns off again
   publishWPchange(1);
-  delay(10000); // 10 second delay, then pump goes off
+  delay(22000); // 22 second delay, then pump goes off
   publishWPchange(0);
 
      // delay before next test
@@ -95,7 +96,9 @@ void publishTRH(float temp, float rh) {
   eData += String(temp);
   eData += ",\"rh\":";
   eData += String(rh);
-  eData += "}";
+  eData += ",\"loctime\":\"";
+  eData += String(Time.format("%F %T"));
+  eData += "\"}";
 
   // publish to the webhook
   Particle.publish("wsmEventTRH", eData, PRIVATE);
@@ -107,6 +110,7 @@ void publishTRH(float temp, float rh) {
 void publishPPchange(int newPPstatus) {
   static unsigned long ppumpOnTimestamp;
   String eData = "";
+  float pumpTime;
 
   // build the data string with time, pp value
   eData += "{\"etime\":";
@@ -117,12 +121,17 @@ void publishPPchange(int newPPstatus) {
   // computation of PP on time
   if(newPPstatus == 1) {  // the pump has come on
     ppumpOnTimestamp = millis();
-    eData += "}"; // terminate the json string without ppon parameter
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
   }
   else {    // the pump has turned off
     eData += ",\"ppon\":";
-    eData += String( (millis() - ppumpOnTimestamp)/1000 );
-    eData += "}"; // terminate the json string with ppon parameter  
+    pumpTime = (float)(millis() - ppumpOnTimestamp)/60000.0;
+    eData += String(pumpTime);
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
   }
 
   // publish to the webhook
@@ -135,6 +144,7 @@ void publishPPchange(int newPPstatus) {
 void publishWPchange(int newWPstatus) {
   static unsigned long wpumpOnTimestamp;
   String eData = "";
+  float pumpTime;
 
   // build the data string with time, pp value
   eData += "{\"etime\":";
@@ -145,12 +155,17 @@ void publishWPchange(int newWPstatus) {
 // computation of WP on time
   if(newWPstatus == 1) {  // the pump has come on
     wpumpOnTimestamp = millis();
-    eData += "}"; // terminate the json string without wpon parameter
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
   }
   else {    // the pump has turned off
     eData += ",\"wpon\":";
-    eData += String( (millis() - wpumpOnTimestamp)/1000 );
-    eData += "}"; // terminate the json string with ppon parameter  
+    pumpTime = (float)(millis() - wpumpOnTimestamp)/60000;
+    eData += String(pumpTime);
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
   }
 
   // publish to the webhook
