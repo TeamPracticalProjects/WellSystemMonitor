@@ -5,8 +5,10 @@
  *  that appends a row of data to a designated Google sheet.
  * 
  * Author: Bob Glicksman, Jim Schrempp, Team Practical Projects
- * Date: 6/05/21
+ * Date: 6/12/21
  */
+
+const int UTC_OFFSET = -8;  // set for Pacific Standard Time
 
 const int LED_PIN = D7;  // declare the onboard LED
 
@@ -103,6 +105,7 @@ void publishTRH(float temp, float rh) {
 
 //  publish pressure pump status change
 void publishPPchange(int newPPstatus) {
+  static unsigned long ppumpOnTimestamp;
   String eData = "";
 
   // build the data string with time, pp value
@@ -110,7 +113,17 @@ void publishPPchange(int newPPstatus) {
   eData += String(Time.now());
   eData += ",\"pp\":";
   eData += String(newPPstatus);
-  eData += "}";
+
+  // computation of PP on time
+  if(newPPstatus == 1) {  // the pump has come on
+    ppumpOnTimestamp = millis();
+    eData += "}"; // terminate the json string without ppon parameter
+  }
+  else {    // the pump has turned off
+    eData += ",\"ppon\":";
+    eData += String( (millis() - ppumpOnTimestamp)/1000 );
+    eData += "}"; // terminate the json string with ppon parameter  
+  }
 
   // publish to the webhook
   Particle.publish("wsmEventPPstatus", eData, PRIVATE);
@@ -120,6 +133,7 @@ void publishPPchange(int newPPstatus) {
 
 //  publish well pump status change
 void publishWPchange(int newWPstatus) {
+  static unsigned long wpumpOnTimestamp;
   String eData = "";
 
   // build the data string with time, pp value
@@ -127,7 +141,17 @@ void publishWPchange(int newWPstatus) {
   eData += String(Time.now());
   eData += ",\"wp\":";
   eData += String(newWPstatus);
-  eData += "}";
+
+// computation of WP on time
+  if(newWPstatus == 1) {  // the pump has come on
+    wpumpOnTimestamp = millis();
+    eData += "}"; // terminate the json string without wpon parameter
+  }
+  else {    // the pump has turned off
+    eData += ",\"wpon\":";
+    eData += String( (millis() - wpumpOnTimestamp)/1000 );
+    eData += "}"; // terminate the json string with ppon parameter  
+  }
 
   // publish to the webhook
   Particle.publish("wsmEventWPstatus", eData, PRIVATE);
