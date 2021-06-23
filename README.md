@@ -15,8 +15,9 @@ from a DHT11 sensor is also logged to the cloud storage every hour. Perhaps wate
 activity will correlate with temperature and/or humidity.
 
 This system publishes events and exposes variables through the Particle.io cloud system 
-to pass current sensor readings to a smart phone application. It also uses IFTTT to 
-capture these published events to a Google Docs spreadsheet. 
+to pass current sensor readings to a smart phone application. It uses a Particle Webhook
+and a custom made Google Apps Script to capture these published events to a Google Docs 
+spreadsheet. 
 
 This program also supports a "test" button. When pressed a test event is sent to the cloud
 storage.
