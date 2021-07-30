@@ -1,0 +1,74 @@
+// Google Apps Script WebApp to log WSM events to a Google sheet
+//  This version of code makes two changes to the original version:
+//    1. It determines the current last row of the spreadsheet and deletes earlier rows if the sheet gets
+//       too large.  The last allowed row and number of rows to delete are defined constants in the code.
+//    2. It records the date/time string localized to PDT.
+//
+//  This version is the same as v2.0, except that it contains the actual defined constants for the
+//	system deployed in Santa Rosa.
+//
+//  Author: Bob Glicksman
+//  Version: 3.0
+//  Date: 7/30/21
+//  (c) 2021, Bob Glicksman, Jim Schrempp, Team Practical Projects; all rights reserved
+//
+
+
+function doGet(e) { 
+
+var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/17M1ISpjOt7nIk8vfziPpDGuupDBHyUK_kGOL3wx_EuU/edit#gid=0");
+var sheet = ss.getSheetByName("Sheet1");
+
+ addUser(e,sheet);
+}
+
+function doPost(e) { 
+ var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/17M1ISpjOt7nIk8vfziPpDGuupDBHyUK_kGOL3wx_EuU/edit#gid=0");
+ var sheet = ss.getSheetByName("Sheet1"); 
+  
+ addUser(e, sheet);
+}
+
+
+function addUser(e, sheet) {
+  
+  var edata = e.parameter.data;
+  var wsmData = JSON.parse(edata);
+  var ev = e.parameter.event;
+  var pub = e.parameter.published_at;
+  
+  var time = wsmData.etime ; 
+  var temp = wsmData.temp ;
+  var rh = wsmData.rh ;
+  var pp = wsmData.pp ;
+  var wp = wsmData.wp ;
+  var ptm = wsmData.ppon ;
+  var wtm = wsmData.wpon ;
+  var loctm = wsmData.loctime ;  // produced by the Photon; does not convert for DST
+  var tzAdjustedTime = computeLocalTime(time);  // computed actual time string from photon unix time
+
+  //sheet.appendRow([time,temp,rh,pp,wp,ptm,wtm,ev,loctm]);
+  sheet.appendRow([time,temp,rh,pp,wp,ptm,wtm,ev,tzAdjustedTime]);
+  cleanUpSheet(sheet);  // keep the number of rows within bounds by deleting the oldest entries
+}
+
+function cleanUpSheet(sheet) {
+  
+  const MAX_ROWS = 2000;  // delete some rows if sheet has more than this
+  const ROWS_TO_DELETE = 200;  // number of oldest rows to delete in a cleanup operation
+  
+  var lastRow = sheet.getLastRow();
+  
+  if(lastRow >= MAX_ROWS) {
+    sheet.deleteRows(2, ROWS_TO_DELETE);
+  }
+  
+}
+
+function computeLocalTime(integerTime) {
+  
+  var formattedDate = Utilities.formatDate(new Date(integerTime * 1000), "America/Los_Angeles", "yyyy-MM-dd' 'HH:mm:ss");
+  return formattedDate;
+  
+}  
+
