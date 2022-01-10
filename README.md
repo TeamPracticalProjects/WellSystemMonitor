@@ -10,6 +10,10 @@ alerts and alarms when the pumps run in an abnormal pattern.
 
 Eventually other sensors could be added to this system as discussed in the concept document.
 
+After six months of operation we've learned many things and had some great success. Our 
+analysis of what the system has accomplished is contained in the report
+**/Documentation/well system 6 month review.pdf**
+
 Because this system is built using the WaterLeakDetector code, temperature and humidity
 from a DHT11 sensor is also logged to the cloud storage every hour. Perhaps water pump
 activity will correlate with temperature and/or humidity.
