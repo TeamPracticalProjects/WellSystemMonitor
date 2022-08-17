@@ -39,9 +39,11 @@
                     library since a 2019 update to the Particle OS.  Also updated the PietteTech_DHT
                     library to the latest version and updated the build to Particle OS 3.0.0.
 
-     2021.05.14 BG: Added new publication functions for new spreadsheet format with Google App 
+    2021.05.14 BG: Added new publication functions for new spreadsheet format with Google App 
                      Script replacing IFTTT.  Added calls to these new publication functions in 
                      loop(), commenting out the old function calls.
+
+    2022.08.17 BG:  Added in Alert processing code
 
 ***********************************************************************************************************/
 // #define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
@@ -49,6 +51,7 @@
 #include <WSMGlobals.h>
 #include <TPPUtils.h>
 #include <PietteTech_DHT.h> // non-blocking library for DHT11
+#include "WSMAlertProcessor.h"  // the alert generation library
 
 // Constants and definitions
 #define DHTTYPE  DHT11              // Sensor type DHT11/21/22/AM2301/AM2302
@@ -112,6 +115,9 @@ void initDebounce (ty_debouncePin *debounceStruct, int _pinNumber, boolean _valu
 PietteTech_DHT DHT(DHTPIN, DHTTYPE);    // create DHT object to read temp and humidity
 Servo myservo;  // create servo object to control a servo
 
+// create instance of WSMAlertProcessor class
+WSMAlertProcessor alerter;
+
 
 // Utility functions
 
@@ -151,6 +157,7 @@ void setup() {
     initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
 
     DHT.begin();    // start up the DHT11 sensor
+    alerter.begin();    // initialize the alert generator
 
     // set for local time
     Time.zone(UTC_OFFSET);
@@ -519,6 +526,9 @@ void publishTRH(float temp, float rh) {
   // publish to the webhook
   Particle.publish("wsmEventTRH", eData, PRIVATE);
 
+  // publish a 1/2 hour time tick increment to the alert processor
+  alerter.halfHourTimeTick();
+
   return;
 } // end of publishTRH()
 
@@ -540,6 +550,9 @@ void publishPPchange(int newPPstatus) {
     eData += ",\"loctime\":\"";
     eData += String(Time.format("%F %T"));
     eData += "\"}";
+
+    // publish pp turned on to alert processor
+    alerter.ppTurnedOn();
   }
   else {    // the pump has turned off
     eData += ",\"ppon\":";
@@ -548,6 +561,9 @@ void publishPPchange(int newPPstatus) {
     eData += ",\"loctime\":\"";
     eData += String(Time.format("%F %T"));
     eData += "\"}";
+
+    // publish pp turned off to alert processor
+    alerter.ppTurnedOff(pumpTime);
   }
 
   // publish to the webhook
@@ -562,7 +578,7 @@ void publishWPchange(int newWPstatus) {
   String eData = "";
   float pumpTime;
 
-  // build the data string with time, pp value
+  // build the data string with time, wp value
   eData += "{\"etime\":";
   eData += String(Time.now());
   eData += ",\"wp\":";
@@ -574,6 +590,9 @@ void publishWPchange(int newWPstatus) {
     eData += ",\"loctime\":\"";
     eData += String(Time.format("%F %T"));
     eData += "\"}";
+
+    // publish wp turned on to alert processor
+    alerter.wpTurnedOn();
   }
   else {    // the pump has turned off
     eData += ",\"wpon\":";
@@ -582,6 +601,9 @@ void publishWPchange(int newWPstatus) {
     eData += ",\"loctime\":\"";
     eData += String(Time.format("%F %T"));
     eData += "\"}";
+
+    // publish wp turned off to alert processor
+    alerter.wpTurnedOff(pumpTime);
   }
 
   // publish to the webhook
