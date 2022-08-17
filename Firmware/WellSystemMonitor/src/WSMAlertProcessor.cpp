@@ -11,7 +11,7 @@
  * version 1.2: 8/9/2022.  Completed unit testing and verified all alerts and holdoffs appear to work.
  * 
  *******************************************************************************/
-#include "WSMAlertProcessor.h"
+#include <WSMAlertProcessor.h>
 
 // Constructor
 WSMAlertProcessor::WSMAlertProcessor() {

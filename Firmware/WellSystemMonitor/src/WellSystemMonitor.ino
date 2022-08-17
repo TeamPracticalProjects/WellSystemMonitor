@@ -51,7 +51,7 @@
 #include <WSMGlobals.h>
 #include <TPPUtils.h>
 #include <PietteTech_DHT.h> // non-blocking library for DHT11
-#include "WSMAlertProcessor.h"  // the alert generation library
+#include <WSMAlertProcessor.h>  // the alert generation library
 
 // Constants and definitions
 #define DHTTYPE  DHT11              // Sensor type DHT11/21/22/AM2301/AM2302
@@ -157,7 +157,7 @@ void setup() {
     initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
 
     DHT.begin();    // start up the DHT11 sensor
-    alerter.begin();    // initialize the alert generator
+
 
     // set for local time
     Time.zone(UTC_OFFSET);
@@ -169,6 +169,8 @@ void setup() {
     digitalWrite(INDICATOR_PIN, LOW);
     delay(1200);  // Give particle cloud time to stabilize
     digitalWrite(INDICATOR_PIN, HIGH);  // Pushbutton pin remains solid ON while device is working
+
+    alerter.begin();    // initialize the alert generator
 
 }  // end of setup()
 
