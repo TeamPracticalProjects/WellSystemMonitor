@@ -7,9 +7,9 @@ function doPost(e) {
 }
 
 function tppNotify(e) {
-  const targetBob = "4085068005@txt.att.net";
-  const targetJim = "4083150323@txt.att.net";
-  const targetHorst = "6503051089@mms.att.net";
+  const targetBob = "<cellular sms gateway email address goes here>";
+  const targetJim = "<cellular sms gateway email address goes here>";
+  const targetHorst = "<cellular sms gateway email address goes here>";
   const subj = "Well Pump Trigger Notification";
   var eventTxt = e.parameter.data;
   var ev = e.parameter.event;
