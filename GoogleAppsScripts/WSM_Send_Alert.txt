@@ -7,8 +7,8 @@ function doPost(e) {
 }
 
 function sendAlert(e) {
-  const targetBob = "4085068005@txt.att.net";
-  //const targetJim = "4083150323@txt.att.net";
+  const targetBob = "<cellular sms gateway email address goes here>";
+  //const targetJim = "<cellular sms gateway email address goes here>";
   
   var ev = e.parameter.event;
   var eventTxt = e.parameter.data;
