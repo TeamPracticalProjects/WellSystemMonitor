@@ -1,0 +1,70 @@
+function doGet(e) {
+  sendAlert(e);
+}
+
+function doPost(e) {
+  sendAlert(e);
+}
+
+function sendAlert(e) {
+  const targetBob = "4085068005@txt.att.net";
+  //const targetJim = "4083150323@txt.att.net";
+  
+  var ev = e.parameter.event;
+  var eventTxt = e.parameter.data;
+  
+  var wsmData = JSON.parse(eventTxt);
+  var message = wsmData.msg;
+  var subject = generateSubjText(ev);
+  var uTime = wsmData.etime;
+
+  var tmStamp = computeLocalTime(uTime);
+  var body = message + " at: " + tmStamp;
+   
+  MailApp.sendEmail(targetBob, subject, body);
+  //MailApp.sendEmail(targetJim, subject, body);
+  
+}
+
+function generateSubjText(ev) {
+  switch(ev) {
+    case "wsmAlertPPOnTooLong":
+      return "WSM ALERT: The PP was on too long";
+      break;
+      
+    case "wsmAlertPPOnTooShort":
+      return "WSM ALERT: The PP was on too short";
+      break;
+      
+    case "wsmAlertWPOnTooLong":
+      return "WSM ALERT: The WP was on too long";
+      break;
+      
+    case "wsmAlertWPOnTooShort":
+      return "WSM ALERT: The WP was on too short";
+      break;
+      
+    case "wsmAlertWPNotComeOn":
+      return "WSM ALERT: The WP did not come on";
+      break;
+      
+    case "wsmAlertWPOnTooSoon":
+      return "WSM ALERT: The WP ran too soon";
+      break;
+      
+    case "wsmAlertPPNotRun":
+      return "WSM ALERT: The PP did not come on";
+      break;
+      
+    default:
+      return ev;
+  }
+} 
+
+function computeLocalTime(integerTime) {
+  
+  var formattedDate = Utilities.formatDate(new Date(integerTime * 1000), "America/Los_Angeles", "yyyy-MM-dd' 'HH:mm:ss");
+  return formattedDate;
+  
+}  
+
