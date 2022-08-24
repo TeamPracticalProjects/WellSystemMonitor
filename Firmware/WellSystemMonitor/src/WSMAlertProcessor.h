@@ -7,6 +7,7 @@
  * (c) 2022, Bob Glicksman, Jim Schrempp, Team Practical Projects
  * 
  * version 1.0: 8/9/2022.  Initial release
+ * version 1.1: 8/23/22.  Fixed initialization bug 
  * 
  *******************************************************************************/
 #ifndef wsmap

@@ -24,7 +24,7 @@ void WSMAlertProcessor::begin() {
 
     // initialize accumulators to zero
     _ppAccumulatedOnTime = 0.0; // accumulation of PP run imes
-    _timeBetweenPPevents = 0;  // accumulation of ½ hour “ticks”
+    _timeBetweenPPevents = 0;  // accumulation of ½ hour “ticks” for how long PP didn't come on
 
     // initialize holdoff to max values so that first alerts will happen
     _ppAlertHoldoff = ONE_DAY;   // holdoff between new sms alerts for PP conditions.
@@ -78,9 +78,9 @@ unsigned int WSMAlertProcessor::get_ppNotRunAlertHoldoff() {
 //  so that the values don’t get needlessly large.  
 //  Generates an alert for “PP has not run for greater than a threshold time”.
 void WSMAlertProcessor::halfHourTimeTick() {
-    if(_timeBetweenPPevents < ONE_DAY) {
-        _timeBetweenPPevents++;
-    }
+//    if(_timeBetweenPPevents < ONE_DAY) {
+//        _timeBetweenPPevents++;
+//    }
     
     if(_ppAlertHoldoff < ONE_DAY) {
         _ppAlertHoldoff++;
@@ -99,18 +99,18 @@ void WSMAlertProcessor::halfHourTimeTick() {
     }
     
     // we must test to see if PP didn't run at all for a long time
-    if(_interPPrunTime < ONE_DAY) {
-        _interPPrunTime++;
+    if(_timeBetweenPPevents < ONE_DAY) {
+        _timeBetweenPPevents++;
     } else {
         if (_ppNotRunAlertHoldoff >= THREE_DAYS) {
             // generate PP not run after too long time alert #7
-            publishPPNotRun(_interPPrunTime);
+            publishPPNotRun(_timeBetweenPPevents);
 
             // reset the alert holdoff
             _ppNotRunAlertHoldoff = 0;
         }
         // clamp at one day
-        _interPPrunTime = ONE_DAY;  
+        _timeBetweenPPevents = ONE_DAY;  
 
     }
         
@@ -119,7 +119,7 @@ void WSMAlertProcessor::halfHourTimeTick() {
 // ppTurnedOn():  called every time the PP comes on
 void WSMAlertProcessor::ppTurnedOn() {
     // pp has run, so reset alert counter
-    _interPPrunTime = 0;
+    _timeBetweenPPevents = 0;
 
 }  // end ppTurnedOn()
         
