@@ -44,6 +44,8 @@
                      loop(), commenting out the old function calls.
 
     2022.08.17 BG:  Added in Alert processing code
+    2022.08.23 BG:  Fixed initialization issue with PP and WP.  Added comment about not changing the time tick
+                        constant because it is used for Alert Processing as well as for TRH logging.
 
 ***********************************************************************************************************/
 // #define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
@@ -152,8 +154,8 @@ void setup() {
     pinMode(PRESSURE_PUMP_SENSOR_PIN, INPUT_PULLUP);
     myservo.attach(SERVO_PIN);  // attaches to the servo object
     initDebounce(&mg_pushbutton, BUTTON_PIN, false, false, 0, 100);
-    initDebounce(&mg_wellPumpSensor, WELL_PUMP_SENSOR_PIN, false, false, 0, 1000);
-    initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, false, false, 0, 1000);
+    initDebounce(&mg_wellPumpSensor, WELL_PUMP_SENSOR_PIN, true, true, 0, 1000);
+    initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, true, true, 0, 1000);
     initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
 
     DHT.begin();    // start up the DHT11 sensor
@@ -251,6 +253,12 @@ void loop() {
 
     moveServo(htSwitchState); 
 
+    /******************************************************************
+     * NOTE: PARTICLE_DHT_PUBLISH_INTERVAL is used for timings in the WSM Alert Processor as well
+     * as for publishing intervals of TRH.  DO NOT CHANGE this constant value and DO NOT DELETE this test.
+     * If it is desired not to log TRH, then comment outt the line below: 
+     * publishTRH(mg_smoothedTemp, mg_smoothedHumidity);
+     * *****************************************************************/
     if((diff(millis(), lastPublishTime)) >= PARTICLE_DHT_PUBLISH_INTERVAL)  // we should publish our values
     {
         lastPublishTime = millis();
