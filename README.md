@@ -6,7 +6,7 @@ alert the system owner of problems with the system before they cause system dama
 well system consists of the following components:
 
 1. Well Pump: the Well Pump is buried and is very expensive to replace. The pump is used
-to pump water out of the well and into a reservoir. The well pump should only run for
+to pump water out of the well and into a reservoir. The Well Pump should only run for
 limited amounts of time to extend its life.
 
 2. Reservoir: a large reservoir holds water from the well, in order to limit the pumping times
