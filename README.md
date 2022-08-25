@@ -61,7 +61,7 @@ Google spreadsheet to prevent it from getting too large.  The second script is a
 Photon firmware, via Particle webhooks. This script processes the alert data and sends emails to the well owner's cellular carrier's
 sms gateway in order to alert the owner via SMS texts to a his/her cell phone.
 
-3. A Android app: the app is used to spot check the monitoring and alert system.
+3. Android app: the app is used to spot check the monitoring and alert system.
 
 4. Two Particle webhooks:  these are simple webhooks that process publications from the Particle Photon and make https:// POST
 calls to their respective scripts.
