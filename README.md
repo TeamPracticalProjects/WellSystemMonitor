@@ -85,8 +85,8 @@ Terms_of_Use_License_and_Disclaimer:  You must read this document and agree to i
 ### .vscode folder. 
 Contains project information for the Particle Workbench editor.
 ### AlertTester folder. 
-Contains firmware for a unit test routine to test out the WSMAlertprocessor library.  Use in conjuction with WSMAlertprocessor.h and
-WSMAlertprocessor.cpp
+Contains firmware for a unit test routine to test out the WSMAlertProcessor library.  Use in conjuction with WSMAlertProcessor.h and
+WSMAlertProcessor.cpp
 ### Documentation Folder.
 Contains documents about the project, including:
 
