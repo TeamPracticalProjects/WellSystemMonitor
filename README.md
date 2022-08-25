@@ -89,17 +89,26 @@ Contains firmware for a unit test routine to test out the WSMAlertprocessor libr
 WSMAlertprocessor.cpp
 ### Documentation Folder.
 Contains documents about the project, including:
+
 WSM Build manual: how to make a WSM system
+
 WSM Set Up Guide: how to install and set up a WSM system
+
 WSM System Monitor Project Concept:  A technical overview of the WSM system.
+
 well system 6 month review:  notes from and interim evaluation of the project and the logged data.
+
 ### Firmware/WellSystemMonitor folder.
 Contains source and compiled code for the WSM Photon
 ### GoogleAppsScripts folder.
 Contains source code for the scripts that are part of this project:
+
 WSM_Send_Alert: the script that processes alert notifications from Particle and causes SMS texts to be sent
+
 wsmWriteData: the script that processes event notifications from Particle and manages entries to the Google sheet event log.
+
 wsmAlertSantaRosaAlerts:  NO LONGER USED (this was a test script for evaluating SMS text alerts).
+
 ### SheetAPI_Test folder.
 NO LONGER USED.  This folder contains test Google Apps Scripts during development and testing of the Google sheet logging mechanism.
 ### TestApp folder.
