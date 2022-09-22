@@ -1,0 +1,39 @@
+function doGet(e) {
+  tppNotify(e);
+}
+
+function doPost(e) {
+  tppNotify(e);
+}
+
+function tppNotify(e) {
+  const targetBob = "<cellular sms gateway email address goes here>";
+  const targetJim = "<cellular sms gateway email address goes here>";
+  const targetHorst = "<cellular sms gateway email address goes here>";
+  const subj = "Well Pump Trigger Notification";
+  var eventTxt = e.parameter.data;
+  var ev = e.parameter.event;
+  var pub = e.parameter.published_at;
+  
+  var wsmData = JSON.parse(eventTxt);
+  var time = wsmData.etime ; 
+  var temp = wsmData.temp ;
+  var rh = wsmData.rh ;
+  var pp = wsmData.pp ;
+  var wp = wsmData.wp ;
+  var ptm = wsmData.ppon ;
+  var wtm = wsmData.wpon ;
+  var loctm = wsmData.loctime ;
+  
+  if(wp == 0) {
+    var messageTxt = "Well pump ran for " + wtm;
+    messageTxt += " minutes";
+  }
+  else {
+    var messageTxt = "Well pump turned on at " + loctm;
+  }
+  
+  MailApp.sendEmail(targetBob, subj, messageTxt);
+  MailApp.sendEmail(targetJim, subj, messageTxt);
+  MailApp.sendEmail(targetHorst, subj, messageTxt);
+}
