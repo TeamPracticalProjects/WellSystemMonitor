@@ -5,13 +5,16 @@
  *  that appends a row of data to a designated Google sheet.
  * 
  * Author: Bob Glicksman, Jim Schrempp, Team Practical Projects
- * Date: 6/05/21
+ * Date: 6/12/21
  */
+
+const int UTC_OFFSET = -8;  // set for Pacific Standard Time
 
 const int LED_PIN = D7;  // declare the onboard LED
 
 void setup() {
   pinMode (LED_PIN, OUTPUT);
+  Time.zone(UTC_OFFSET);
 
   // flash the LED_PIN to indicate end of setup
   digitalWrite(LED_PIN, HIGH);
@@ -23,8 +26,8 @@ void setup() {
 
 void loop() {
   // declare the variables for the WSM
-  float temperature = 65.0f;
-  float rh = 20.0f;
+  static float temperature = 65.0f;
+  static float rh = 20.0f;
   int ppValue = 0;
   int wpValue = 0;
 
@@ -50,7 +53,7 @@ void loop() {
 
   // test #3: publish pp turns on, then turns off again
   publishPPchange(1);
-  delay(10000); // 10 second delay, then pump goes off
+  delay(15000); // 15 second delay, then pump goes off
   publishPPchange(0);
 
      // delay before next test
@@ -68,7 +71,7 @@ publishTRH(temperature, rh);
 
   // test #5: publish wp turns on, tehn turns off again
   publishWPchange(1);
-  delay(10000); // 10 second delay, then pump goes off
+  delay(22000); // 22 second delay, then pump goes off
   publishWPchange(0);
 
      // delay before next test
@@ -93,7 +96,9 @@ void publishTRH(float temp, float rh) {
   eData += String(temp);
   eData += ",\"rh\":";
   eData += String(rh);
-  eData += "}";
+  eData += ",\"loctime\":\"";
+  eData += String(Time.format("%F %T"));
+  eData += "\"}";
 
   // publish to the webhook
   Particle.publish("wsmEventTRH", eData, PRIVATE);
@@ -103,14 +108,31 @@ void publishTRH(float temp, float rh) {
 
 //  publish pressure pump status change
 void publishPPchange(int newPPstatus) {
+  static unsigned long ppumpOnTimestamp;
   String eData = "";
+  float pumpTime;
 
   // build the data string with time, pp value
   eData += "{\"etime\":";
   eData += String(Time.now());
   eData += ",\"pp\":";
   eData += String(newPPstatus);
-  eData += "}";
+
+  // computation of PP on time
+  if(newPPstatus == 1) {  // the pump has come on
+    ppumpOnTimestamp = millis();
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+  }
+  else {    // the pump has turned off
+    eData += ",\"ppon\":";
+    pumpTime = (float)(millis() - ppumpOnTimestamp)/60000.0;
+    eData += String(pumpTime);
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+  }
 
   // publish to the webhook
   Particle.publish("wsmEventPPstatus", eData, PRIVATE);
@@ -120,14 +142,31 @@ void publishPPchange(int newPPstatus) {
 
 //  publish well pump status change
 void publishWPchange(int newWPstatus) {
+  static unsigned long wpumpOnTimestamp;
   String eData = "";
+  float pumpTime;
 
   // build the data string with time, pp value
   eData += "{\"etime\":";
   eData += String(Time.now());
   eData += ",\"wp\":";
   eData += String(newWPstatus);
-  eData += "}";
+
+// computation of WP on time
+  if(newWPstatus == 1) {  // the pump has come on
+    wpumpOnTimestamp = millis();
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+  }
+  else {    // the pump has turned off
+    eData += ",\"wpon\":";
+    pumpTime = (float)(millis() - wpumpOnTimestamp)/60000;
+    eData += String(pumpTime);
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+  }
 
   // publish to the webhook
   Particle.publish("wsmEventWPstatus", eData, PRIVATE);

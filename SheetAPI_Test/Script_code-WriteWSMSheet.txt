@@ -26,6 +26,10 @@ function addUser(e, sheet) {
   var rh = wsmData.rh ;
   var pp = wsmData.pp ;
   var wp = wsmData.wp ;
+  var ptm = wsmData.ppon ;
+  var wtm = wsmData.wpon ;
+  var loctm = wsmData.loctime ;
 
-  sheet.appendRow([time,temp,rh,pp,wp,ev,pub]);
+  sheet.appendRow([time,temp,rh,pp,wp,ptm,wtm,ev,loctm]);
 }
+

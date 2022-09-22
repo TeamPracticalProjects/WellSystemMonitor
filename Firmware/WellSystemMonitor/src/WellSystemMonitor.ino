@@ -26,8 +26,10 @@
     version 1.1: corrected bug that turned LED Indicator off sporatically; Bob Glicksman 12/19/18
     version 1.2: made change to enable the system thread so that firmware can detect disconnects 
     	from the Particle cloud; Bob Glicksman 12/20/18
+    version 1.3: added new publication functions for new spreadsheet format with Google App Script
+        replacing IFTTT
 
-    (c) 2017, 2018, 2019 Bob Glicksman and Jim Schrempp, Team Practical Projects
+    (c) 2017, 2018, 2019, 2020, 2021 Bob Glicksman and Jim Schrempp, Team Practical Projects
 
     2019.08.29 JBS: Added auto antenna selection in setup(); This file only cloud compiles with Visual Studio Code.
                     Added that first time through loop publish temp and humidity
@@ -36,12 +38,22 @@
     2021.05.14 BG: Added DHT.begin() method call to setup().  This is required by the PietteTech_DHT
                     library since a 2019 update to the Particle OS.  Also updated the PietteTech_DHT
                     library to the latest version and updated the build to Particle OS 3.0.0.
+
+    2021.05.14 BG: Added new publication functions for new spreadsheet format with Google App 
+                     Script replacing IFTTT.  Added calls to these new publication functions in 
+                     loop(), commenting out the old function calls.
+
+    2022.08.17 BG:  Added in Alert processing code
+    2022.08.23 BG:  Fixed initialization issue with PP and WP.  Added comment about not changing the time tick
+                        constant because it is used for Alert Processing as well as for TRH logging.
+
 ***********************************************************************************************************/
-//#define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
+// #define IFTTT_NOTIFY    // comment out if IFTTT alarm notification is not desired
 
 #include <WSMGlobals.h>
 #include <TPPUtils.h>
 #include <PietteTech_DHT.h> // non-blocking library for DHT11
+#include <WSMAlertProcessor.h>  // the alert generation library
 
 // Constants and definitions
 #define DHTTYPE  DHT11              // Sensor type DHT11/21/22/AM2301/AM2302
@@ -57,6 +69,8 @@ const bool HT_SWITCH_HUMIDITY = false;
 const bool HT_SWITCH_TEMPERATURE = true;
 #define DHT_SAMPLE_INTERVAL   4000  // Sample every 4 seconds; must not be less than the time required to read DHT
 #define PARTICLE_DHT_PUBLISH_INTERVAL 1800000 // Publish values every 30 minutes
+
+const int UTC_OFFSET = -8;  // set for Pacific Standard Time
 
 // servo calibration values
 const int MIN_POS = 5;  // the minimum position value allowed
@@ -103,6 +117,9 @@ void initDebounce (ty_debouncePin *debounceStruct, int _pinNumber, boolean _valu
 PietteTech_DHT DHT(DHTPIN, DHTTYPE);    // create DHT object to read temp and humidity
 Servo myservo;  // create servo object to control a servo
 
+// create instance of WSMAlertProcessor class
+WSMAlertProcessor alerter;
+
 
 // Utility functions
 
@@ -137,11 +154,15 @@ void setup() {
     pinMode(PRESSURE_PUMP_SENSOR_PIN, INPUT_PULLUP);
     myservo.attach(SERVO_PIN);  // attaches to the servo object
     initDebounce(&mg_pushbutton, BUTTON_PIN, false, false, 0, 100);
-    initDebounce(&mg_wellPumpSensor, WELL_PUMP_SENSOR_PIN, false, false, 0, 1000);
-    initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, false, false, 0, 1000);
+    initDebounce(&mg_wellPumpSensor, WELL_PUMP_SENSOR_PIN, true, true, 0, 1000);
+    initDebounce(&mg_pressurePumpSensor, PRESSURE_PUMP_SENSOR_PIN, true, true, 0, 1000);
     initDebounce(&mg_htSwitchPin, HT_SWITCH_PIN, false, false, 0, 50);
 
     DHT.begin();    // start up the DHT11 sensor
+
+
+    // set for local time
+    Time.zone(UTC_OFFSET);
     
     Particle.variable("SensorReport", mg_particleSensorReport);
 
@@ -150,6 +171,8 @@ void setup() {
     digitalWrite(INDICATOR_PIN, LOW);
     delay(1200);  // Give particle cloud time to stabilize
     digitalWrite(INDICATOR_PIN, HIGH);  // Pushbutton pin remains solid ON while device is working
+
+    alerter.begin();    // initialize the alert generator
 
 }  // end of setup()
 
@@ -230,12 +253,19 @@ void loop() {
 
     moveServo(htSwitchState); 
 
+    /******************************************************************
+     * NOTE: PARTICLE_DHT_PUBLISH_INTERVAL is used for timings in the WSM Alert Processor as well
+     * as for publishing intervals of TRH.  DO NOT CHANGE this constant value and DO NOT DELETE this test.
+     * If it is desired not to log TRH, then comment outt the line below: 
+     * publishTRH(mg_smoothedTemp, mg_smoothedHumidity);
+     * *****************************************************************/
     if((diff(millis(), lastPublishTime)) >= PARTICLE_DHT_PUBLISH_INTERVAL)  // we should publish our values
     {
         lastPublishTime = millis();
         // publish Smoothed temperature and humidity readings to the cloud
-        publishParticleEvent("Humidity Smoothed (%): " + String(mg_smoothedHumidity));
-        publishParticleEvent( "Temperature Smoothed (oF): " + String(mg_smoothedTemp));
+    //    publishParticleEvent("Humidity Smoothed (%): " + String(mg_smoothedHumidity));
+    //    publishParticleEvent( "Temperature Smoothed (oF): " + String(mg_smoothedTemp));
+        publishTRH(mg_smoothedTemp, mg_smoothedHumidity);
     }
 
     // Handle pushbutton
@@ -256,14 +286,16 @@ void loop() {
     if(readPinDebounced(&mg_wellPumpSensor) == true) {
         needNewReport = true;
         String tempString = String(!mg_wellPumpSensor.value); // pump relay sensor is normally open (1) for off
-        publishParticleEvent("well pump state: " + tempString);
+        //publishParticleEvent("well pump state: " + tempString);
+        publishWPchange(!mg_wellPumpSensor.value);
     }
 
     // process the pressure pump sensor
     if(readPinDebounced(&mg_pressurePumpSensor) == true) {
         needNewReport = true;
         String tempString = String(!mg_pressurePumpSensor.value); // pump relay sensor is normally open (1) for off
-        publishParticleEvent("pressure pump state: " + tempString);
+        //publishParticleEvent("pressure pump state: " + tempString);
+            publishPPchange(!mg_pressurePumpSensor.value);
     }
 
     // create a new report if needed
@@ -483,3 +515,110 @@ void meterDisplay(float _displayValue, int _lowestValue, int _highestValue)  {
 
     return;
 }  // end of meterDisplay()
+
+// New publication functions for version 1.3:
+
+//  publish new temperature and humidity values
+void publishTRH(float temp, float rh) {
+  String eData = "";
+
+  // build the data string with time, temp and rh values
+  eData += "{\"etime\":";
+  eData += String(Time.now());
+  eData += ",\"temp\":";
+  eData += String(temp);
+  eData += ",\"rh\":";
+  eData += String(rh);
+  eData += ",\"loctime\":\"";
+  eData += String(Time.format("%F %T"));
+  eData += "\"}";
+
+  // publish to the webhook
+  Particle.publish("wsmEventTRH", eData, PRIVATE);
+
+  // publish a 1/2 hour time tick increment to the alert processor
+  alerter.halfHourTimeTick();
+
+  return;
+} // end of publishTRH()
+
+//  publish pressure pump status change
+void publishPPchange(int newPPstatus) {
+  static unsigned long ppumpOnTimestamp;
+  String eData = "";
+  float pumpTime;
+
+  // build the data string with time, pp value
+  eData += "{\"etime\":";
+  eData += String(Time.now());
+  eData += ",\"pp\":";
+  eData += String(newPPstatus);
+
+  // computation of PP on time
+  if(newPPstatus == 1) {  // the pump has come on
+    ppumpOnTimestamp = millis();
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+
+    // publish pp turned on to alert processor
+    alerter.ppTurnedOn();
+  }
+  else {    // the pump has turned off
+    eData += ",\"ppon\":";
+    pumpTime = (float)(millis() - ppumpOnTimestamp)/60000.0;
+    eData += String(pumpTime);
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+
+    // publish pp turned off to alert processor
+    alerter.ppTurnedOff(pumpTime);
+  }
+
+  // publish to the webhook
+  Particle.publish("wsmEventPPstatus", eData, PRIVATE);
+
+  return;
+} // end of publishPPchange()
+
+//  publish well pump status change
+void publishWPchange(int newWPstatus) {
+  static unsigned long wpumpOnTimestamp;
+  String eData = "";
+  float pumpTime;
+
+  // build the data string with time, wp value
+  eData += "{\"etime\":";
+  eData += String(Time.now());
+  eData += ",\"wp\":";
+  eData += String(newWPstatus);
+
+// computation of WP on time
+  if(newWPstatus == 1) {  // the pump has come on
+    wpumpOnTimestamp = millis();
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+
+    // publish wp turned on to alert processor
+    alerter.wpTurnedOn();
+  }
+  else {    // the pump has turned off
+    eData += ",\"wpon\":";
+    pumpTime = (float)(millis() - wpumpOnTimestamp)/60000;
+    eData += String(pumpTime);
+    eData += ",\"loctime\":\"";
+    eData += String(Time.format("%F %T"));
+    eData += "\"}";
+
+    // publish wp turned off to alert processor
+    alerter.wpTurnedOff(pumpTime);
+  }
+
+  // publish to the webhook
+  Particle.publish("wsmEventWPstatus", eData, PRIVATE);
+
+  return;
+} // end of publishWPchange()
+
