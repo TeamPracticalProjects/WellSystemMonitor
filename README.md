@@ -90,13 +90,12 @@ WSMAlertProcessor.cpp
 ### Documentation Folder.
 Contains documents about the project, including:
 
-WSM Build manual: how to make a WSM system
+Well_Monitor_Project_and_Technical_Overview:  A system overview with detailed technical descriptions of the carious hardware and software
+components.  Appendices provide software and spreadsheet installation instructions.
 
-WSM Set Up Guide: how to install and set up a WSM system
+WSM Build Manual: how to make a WSM system hardware.
 
-WSM System Monitor Project Concept:  A technical overview of the WSM system.
-
-well system 6 month review:  notes from and interim evaluation of the project and the logged data.
+Well system 6 month review:  notes from and interim evaluation of the project and the logged data.
 
 ### Firmware/WellSystemMonitor folder.
 Contains source and compiled code for the WSM Photon
