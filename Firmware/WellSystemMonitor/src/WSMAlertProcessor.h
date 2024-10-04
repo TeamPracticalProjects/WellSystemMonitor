@@ -8,6 +8,7 @@
  * 
  * version 1.0: 8/9/2022.  Initial release
  * version 1.1: 8/23/22.  Fixed initialization bug 
+ * 10/4/2024: Changed pp on too short limit to 0.3 minutes based on field experience with 30 gallon tank
  * 
  *******************************************************************************/
 #ifndef wsmap
@@ -18,7 +19,7 @@
 class WSMAlertProcessor  {
     private:
         // Constants
-        const float PP_ON_TOO_SHORT_LIMIT = 0.5; // PP should not run <= 1/2 minute
+        const float PP_ON_TOO_SHORT_LIMIT = 0.3; // PP should not run <= 1/3 minute
         const float PP_ON_TOO_LONG_LIMIT = 3.0;  // PP should not run >= 3 minutes
         const float WP_ON_TOO_SHORT_LIMIT = 20.0; // WP should not run <= 20 minutes
         const float WP_ON_TOO_LONG_LIMIT = 40.0; // WP should not run >= 40 minutes

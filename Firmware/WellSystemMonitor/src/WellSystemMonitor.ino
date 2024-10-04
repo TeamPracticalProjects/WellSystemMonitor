@@ -174,6 +174,8 @@ void setup() {
 
     alerter.begin();    // initialize the alert generator
 
+    Particle.publishVitals(21600); // publish vitals every 6 hours
+
 }  // end of setup()
 
 // loop()
